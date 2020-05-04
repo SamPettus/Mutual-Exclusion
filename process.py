@@ -261,10 +261,11 @@ def main():
                 balance.put(tempBalance)
                 print("Failure")
                 pass
-            balance.put(tempBalance)
-            #Format Message
-            msg = 'request,' + str(portNum) + ',' + rec + ',' + amt
-            q.put(msg)
+            else:
+                balance.put(tempBalance)
+                #Format Message
+                msg = 'request,' + str(portNum) + ',' + rec + ',' + amt
+                q.put(msg)
         if x == 2:
             while(balance.empty()):
                 pass
