@@ -40,13 +40,7 @@ def listen(p1, clientsocket1, q):
                     print("full msg recieved!")
                     print(full_msg[HEADERSIZE:])
                     x = full_msg[HEADERSIZE:].split(',')
-                    sendObject = []
-                    sendObject.append(int(x[0]))
-                    sendObject.append(int(x[1]))
-                    sendObject.append(x[2])
-                    print(sendObject)
-                    #Sleep Time
-                    time.sleep(1)
+                    sendObject = x
                     q.put(sendObject)
 
                     new_msg = True
@@ -80,16 +74,53 @@ def main():
     p3.start()
     while True:
         if not q.empty():
+            #Sleep Time
+            time.sleep(1)
             sendEvent = q.get()
-            rec = sendEvent[1]
-            sendMsg = str(sendEvent[0]) +"," +str(sendEvent[1]) + "," + sendEvent[2]
-            sendMsg = f'{len(sendMsg):<{HEADERSIZE}}' + sendMsg
-            if rec == 1235:
-                socketAddresses[1].send(bytes(sendMsg, "utf-8"))
-            elif rec == 1236:
-                socketAddresses[3].send(bytes(sendMsg, "utf-8"))
-            elif rec == 1237:
-                socketAddresses[5].send(bytes(sendMsg, "utf-8"))
+            #If request message, Send to Both Ports
+            if sendEvent[0] == 'request':
+                #First Message
+                sendMsg = 'recieve' + ',' + sendEvent[1] + "," + sendEvent[2] + "," + sendEvent[3] + ',' + sendEvent[4]
+                sendMsg = f'{len(sendMsg):<{HEADERSIZE}}' + sendMsg
+
+                if int(sendEvent[1]) == 1235:
+                    socketAddresses[3].send(bytes(sendMsg, "utf-8"))
+                    socketAddresses[5].send(bytes(sendMsg, "utf-8"))
+                elif int(sendEvent[1]) == 1236:
+                    socketAddresses[1].send(bytes(sendMsg, "utf-8"))
+                    socketAddresses[5].send(bytes(sendMsg, "utf-8"))
+                elif int(sendEvent[1]) == 1237:
+                    socketAddresses[1].send(bytes(sendMsg, "utf-8"))
+                    socketAddresses[3].send(bytes(sendMsg, "utf-8"))
+
+            #If reply message, reply to the requester
+            elif sendEvent[0] == 'reply':
+                print("Sending reply")
+                sendMsg = 'reply' + ',' + sendEvent[1] + "," + sendEvent[2] + "," + sendEvent[3] + ',' + sendEvent[4]
+                sendMsg = f'{len(sendMsg):<{HEADERSIZE}}' + sendMsg
+                if int(sendEvent[1]) == 1235:
+                    print("Sent")
+                    socketAddresses[1].send(bytes(sendMsg, "utf-8"))
+                elif int(sendEvent[1]) == 1236:
+                    socketAddresses[3].send(bytes(sendMsg, "utf-8"))
+                elif int(sendEvent[1]) == 1237:
+                    socketAddresses[5].send(bytes(sendMsg, "utf-8"))
+            #If broadcast message, send to both ports
+            elif sendEvent[0] == "broadcast":
+                #Message to first port
+                sendMsg = 'broadcast,' + sendEvent[1] + "," + sendEvent[2] + "," + sendEvent[3] + ',' + sendEvent[4]
+                sendMsg = f'{len(sendMsg):<{HEADERSIZE}}' + sendMsg
+                if int(sendEvent[1]) == 1235:
+                    socketAddresses[3].send(bytes(sendMsg, "utf-8"))
+                    socketAddresses[5].send(bytes(sendMsg, "utf-8"))
+                elif int(sendEvent[1]) == 1236:
+                    socketAddresses[1].send(bytes(sendMsg, "utf-8"))
+                    socketAddresses[5].send(bytes(sendMsg, "utf-8"))
+                elif int(sendEvent[1]) == 1237:
+                    socketAddresses[1].send(bytes(sendMsg, "utf-8"))
+                    socketAddresses[3].send(bytes(sendMsg, "utf-8"))
+
+
 
 
 
